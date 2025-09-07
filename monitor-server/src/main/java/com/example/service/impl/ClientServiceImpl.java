@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.entity.dto.Client;
 import com.example.entity.dto.ClientDetail;
 import com.example.entity.vo.request.ClientDetailVO;
+import com.example.entity.vo.request.RuntimeDetailVO;
 import com.example.mapper.ClientDetailMapper;
 import com.example.mapper.ClientMapper;
 import com.example.service.ClientService;
+import com.example.utils.InfluxDbUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
@@ -32,6 +34,9 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
     @Resource
     ClientDetailMapper detailMapper;
 
+    @Resource
+    InfluxDbUtils influx;
+
     @PostConstruct
     public void initClient() {
         this.list().forEach(this::addClientCache);
@@ -56,7 +61,7 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
     public boolean verifyAndRegister(String token) {
         if (this.registerToken.equals(token)) {
             int id = this.randomClientID();
-            Client client = new Client(id, "未命名主机", token, new Date());
+            Client client = new Client(id, "未命名主机", token, "cn", "未命名节点", new Date());
             if (this.save(client)) {
                 registerToken = this.generateNewToken();
                 this.addClientCache(client);
@@ -76,6 +81,14 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
         } else {
             detailMapper.insert(detail);
         }
+    }
+
+    private final Map<Integer, RuntimeDetailVO> currentRuntime = new ConcurrentHashMap<>();
+
+    @Override
+    public void updateRuntimeDetail(RuntimeDetailVO vo, Client client) {
+        currentRuntime.put(client.getId(), vo);
+        influx.writeRuntimeData(client.getId(), vo);
     }
 
     private void addClientCache(Client client) {

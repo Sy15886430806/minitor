@@ -22,7 +22,18 @@ const router = createRouter({
         }, {
             path: '/index',
             name: 'index',
-            component: () => import('@/views/IndexView.vue')
+            component: () => import('@/views/IndexView.vue'),
+            children: [
+                {
+                    path: '',
+                    name: 'manage',
+                    component: () => import('@/views/main/Manage.vue')
+                }, {
+                    path: 'security',
+                    name: 'security',
+                    component: () => import('@/views/main/Security.vue')
+                }
+            ]
         }
     ]
 })
@@ -33,7 +44,7 @@ const router = createRouter({
 // 重定向到 '/index' 路由
 router.beforeEach((to, from, next) => {
     const isUnauthorized = unauthorized()
-    if(to.name.startsWith('welcome-') && !isUnauthorized) {
+    if (to.name.startsWith('welcome-') && !isUnauthorized) {
         next('/index')
     } else if (to.fullPath.startsWith('/index') && isUnauthorized) {
         next('/')

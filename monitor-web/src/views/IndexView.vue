@@ -1,30 +1,79 @@
 <template>
-  <div style="width: 100vw; height: 100vh; overflow: hidden; position: relative">
-    <!-- 背景图 -->
-    <el-image
-        style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 0"
-        fit="cover"
-        src="https://5pw.net/i/2025/03/06/67c910a925b7e.jpg"
-    />
+  <el-container class="main-container">
+    <el-header class="main-header">
+      <el-image style="height: 30px"
+                src="https://element-plus.org/images/element-plus-logo.svg"/>
+      <div class="tabs">
+        <tab-item v-for="item in tabs" :name="item.name"
+                  :active="item.id === tab" @click="changePage(item)"/>
+        <el-switch style="margin: 0 20px"
+                   v-model="dark" active-color="#424242"
+                   :active-action-icon="Moon"
+                   :inactive-action-icon="Sunny"/>
+        <el-dropdown>
+          <el-avatar class="avatar"
+                     src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"/>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item @click="userLogout">
+                <el-icon>
+                  <Back/>
+                </el-icon>
+                退出登录
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </div>
+    </el-header>
+    <el-main class="main-content">
+      <router-view v-slot="{ Component }">
+        <transition name="el-fade-in-linear" mode="out-in">
+          <keep-alive exclude="Security">
+            <component :is="Component"/>
+          </keep-alive>
+        </transition>
+      </router-view>
+    </el-main>
 
-    <!-- 欢迎文字带毛玻璃 -->
-    <div class="welcome-title">
-      后期正在赶工中...
-    </div>
-
-    <!-- 退出登录按钮 -->
-    <div class="logout-button-wrapper">
-      <el-button class="logout-button" @click="userLogout">
-        退出登录
-      </el-button>
-    </div>
-  </div>
+  </el-container>
 </template>
 
 <script setup>
 
 import {logout} from "@/net/index.js";
 import router from "@/router";
+import {Back, Moon, Sunny} from "@element-plus/icons-vue";
+import {ref} from "vue";
+import {useDark} from "@vueuse/core";
+import TabItem from "@/component/TabItem.vue";
+import {useRoute} from "vue-router";
+import useStore from "element-plus/es/components/table/src/store/index";
+
+const store = useStore()
+const route = useRoute()
+
+const dark = ref(useDark())
+const tabs = [
+  {id: 1, name: '管理', route: 'manage'},
+  {id: 2, name: '安全', route: 'security'}
+]
+
+const defaultIndex = () => {
+  for (let tab of tabs) {
+    if (route.name === tab.route)
+      return tab.id
+  }
+  return 1
+}
+
+const tab = ref(defaultIndex())
+
+function changePage(item) {
+  tab.value = item.id
+  router.push({name: item.route})
+}
+
 
 function userLogout() {
   logout(() => router.push('/'))
@@ -33,37 +82,35 @@ function userLogout() {
 
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
-.welcome-title {
-  position: absolute;
-  top: 15%;
-  left: 50%;
-  transform: translateX(-50%);
-  color: white;
-  font-size: 32px;
-  font-weight: bold;
-  z-index: 1;
+.main-container {
+  height: 100vh;
+  width: 100vw;
+
+  .main-header {
+    height: 55px;
+    background-color: var(--el-bg-color);
+    border-bottom: solid 1px var(--el-border-color);
+    display: flex;
+    align-items: center;
+
+    .tabs {
+      height: 55px;
+      gap: 10px;
+      flex: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: right;
+    }
+  }
+
+  .main-content {
+    height: 100%;
+    background-color: #f5f5f5;
+  }
 }
 
-/* 按钮容器位置控制 */
-.logout-button-wrapper {
-  position: absolute;
-  bottom: 50px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1;
+.dark .main-container .main-content {
+  background-color: #232323;
 }
 
-/* 按钮样式+hover 动画 */
-.logout-button {
-  font-family: 'Noto Serif SC', serif;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.logout-button:hover {
-  background-color: #409EFF; /* Element Plus 默认主题蓝 */
-  color: white;
-  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.5);
-}
 </style>

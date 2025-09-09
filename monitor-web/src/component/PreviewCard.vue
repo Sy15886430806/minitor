@@ -1,7 +1,6 @@
 <script setup>
-import {fitByUnit, osNameToIcon, percentageToStatus} from '@/tools'
+import {copyIp, fitByUnit, osNameToIcon, percentageToStatus, rename} from '@/tools'
 import {ElMessage, ElMessageBox} from "element-plus";
-import {post} from "@/net/index.js";
 import {useClipboard} from "@vueuse/core";
 
 const props = defineProps({
@@ -9,26 +8,6 @@ const props = defineProps({
   update: Function
 })
 
-const {copy} = useClipboard()
-const copyIp = () => copy(props.data.ip).then(() => ElMessage.success('成功复制IP地址到剪贴板'))
-
-function rename() {
-  ElMessageBox.prompt('请输入新的服务器主机名称', '修改名称', {
-    confirmButtonText: '确认',
-    cancelButtonText: '取消',
-    inputValue: props.data.name,
-    inputPattern: /^[a-zA-Z0-9_\u4e00-\u9fa5]{1,10}$/,
-    inputErrorMessage: '名称只能包含中英文字符、数字和下划线',
-  }).then(({value}) => post('/api/monitor/rename', {
-        id: props.data.id,
-        name: value
-      }, () => {
-        ElMessage.success('主机名称已更新')
-        props.update()
-      })
-  ).catch(() => {
-  })
-}
 
 </script>
 
@@ -39,7 +18,7 @@ function rename() {
         <div class="name">
           <span :class="`flag-icon flag-icon-${data.location}`"></span>
           <span style="margin: 0 5px">{{ data.name }}</span>
-          <i class="fa-solid fa-pen-to-square interact-item" @click.stop="rename"></i>
+          <i class="fa-solid fa-pen-to-square interact-item" @click.stop="rename(data.id, data.name, update)"></i>
         </div>
         <div class="os">
           操作系统:

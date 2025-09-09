@@ -3,6 +3,7 @@
 import PreviewCard from "@/component/PreviewCard.vue";
 import {reactive, ref} from "vue";
 import {get} from "@/net/index.js";
+import ClientDetails from "@/component/ClientDetails.vue";
 
 const list = ref([])
 
@@ -26,11 +27,11 @@ const displayClientDetails = (id) => {
     <div class="desc">在这里管理所有已经注册的主机实例，实时监控主机运行状态，快速进行管理和操作。</div>
     <el-divider style="margin: 10px 0"/>
     <div class="card-list">
-      <preview-card v-for="item in list" :data="item" :update="updateList" @click="displayClientDetails(item)"/>
+      <preview-card v-for="item in list" :data="item" :update="updateList" @click="displayClientDetails(item.id)"/>
     </div>
     <el-drawer size="520" :show-close="false" v-model="detail.show"
                :with-header="false" v-if="list.length" @close="detail.id = -1">
-
+      <client-details :id="detail.id" :update="updateList"/>
     </el-drawer>
   </div>
 </template>

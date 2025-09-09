@@ -2,8 +2,9 @@
 import {reactive, watch, computed} from "vue";
 import {get, post} from "@/net/index.js";
 import {copyIp, cpuNameToImage, fitByUnit, osNameToIcon, percentageToStatus, rename} from "@/tools/index.js";
-import {ElMessage} from "element-plus";
+import {ElMessage, ElMessageBox} from "element-plus";
 import RuntimeHistory from "@/component/RuntimeHistory.vue";
+import {Delete} from "@element-plus/icons-vue";
 
 const locations = [
   {name: 'cn', desc: '中国大陆'},
@@ -19,6 +20,8 @@ const props = defineProps({
   id: Number,
   update: Function
 })
+
+const emits = defineEmits(['delete', 'terminal'])
 
 const details = reactive({
   base: {},
@@ -50,6 +53,21 @@ const submitNodeEdit = () => {
     ElMessage.success('节点信息已更新')
   })
 }
+
+function deleteClient() {
+  ElMessageBox.confirm('删除此主机后所有统计数据都将丢失，您确定要这样做吗？', '删除主机', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => {
+    get(`/api/monitor/delete?clientId=${props.id}`, () => {
+      emits('delete')
+      props.update()
+      ElMessage.success('主机已成功移除')
+    })
+  }).catch(() => {})
+}
+
 
 function updateDetails() {
   props.update()
@@ -84,10 +102,19 @@ watch(() => props.id, init, {immediate: true})
   <el-scrollbar>
     <div class="client-details" v-loading="Object.keys(details.base).length === 0">
       <div v-if="Object.keys(details.base).length">
-        <div class="title">
-          <i class="fa-solid fa-server"></i>
-          服务器信息
+        <div style="display: flex;justify-content: space-between">
+          <div class="title">
+            <i class="fa-solid fa-server"></i>
+            服务器信息
+          </div>
+          <div>
+<!--            <el-button :icon="Connection" type="info"-->
+<!--                       @click="emits('terminal', id)" plain text>SSH远程连接</el-button>-->
+            <el-button :icon="Delete" type="danger" style="margin-left: 0"
+                       @click="deleteClient" plain text>删除此主机</el-button>
+          </div>
         </div>
+
         <el-divider style="margin: 10px 0"/>
         <div class="details-list">
           <div>

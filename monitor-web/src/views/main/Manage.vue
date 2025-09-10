@@ -1,12 +1,13 @@
 <script setup>
-
 import PreviewCard from "@/component/PreviewCard.vue";
-import {reactive, ref, computed} from "vue";
-import {get} from "@/net/index.js";
+import {computed, reactive, ref} from "vue";
+import {get} from "@/net";
 import ClientDetails from "@/component/ClientDetails.vue";
 import RegisterCard from "@/component/RegisterCard.vue";
 import {Plus} from "@element-plus/icons-vue";
 import {useRoute} from "vue-router";
+import TerminalWindow from "@/component/TerminalWindow.vue";
+
 
 const locations = [
   {name: 'cn', desc: '中国大陆'},
@@ -24,7 +25,7 @@ const list = ref([])
 const route = useRoute()
 
 const updateList = () => {
-  if(route.name === 'manage') {
+  if (route.name === 'manage') {
     get('/api/monitor/list', data => list.value = data)
   }
 }
@@ -56,6 +57,18 @@ const register = reactive({
 })
 
 const refreshToken = () => get('/api/monitor/register', token => register.token = token)
+
+function openTerminal(id) {
+  terminal.show = true
+  terminal.id = id
+  detail.show = false
+}
+
+const terminal = reactive({
+  show: false,
+  id: -1
+})
+
 
 </script>
 
@@ -90,11 +103,24 @@ const refreshToken = () => get('/api/monitor/register', token => register.token 
     <el-empty description="还没有任何主机哦，点击右上角添加一个吧" v-else/>
     <el-drawer size="520" :show-close="false" v-model="detail.show"
                :with-header="false" v-if="list.length" @close="detail.id = -1">
-      <client-details :id="detail.id" :update="updateList" @delete="updateList"/>
+      <client-details :id="detail.id" :update="updateList" @delete="updateList" @terminal="openTerminal"/>
     </el-drawer>
     <el-drawer v-model="register.show" direction="btt" :with-header="false"
                style="width: 600px;margin: 10px auto" size="320" @open="refreshToken">
       <register-card :token="register.token"/>
+    </el-drawer>
+    <el-drawer style="width: 800px" :size="520" direction="btt"
+               @close="terminal.id = -1"
+               v-model="terminal.show" :close-on-click-modal="false">
+      <template #header>
+        <div>
+          <div style="font-size: 18px;color: dodgerblue;font-weight: bold;">SSH远程连接</div>
+          <div style="font-size: 14px">
+            远程连接的建立将由服务端完成，因此在内网环境下也可以正常使用。
+          </div>
+        </div>
+      </template>
+      <terminal-window :id="terminal.id"/>
     </el-drawer>
 
   </div>

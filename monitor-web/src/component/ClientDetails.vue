@@ -4,7 +4,7 @@ import {get, post} from "@/net/index.js";
 import {copyIp, cpuNameToImage, fitByUnit, osNameToIcon, percentageToStatus, rename} from "@/tools/index.js";
 import {ElMessage, ElMessageBox} from "element-plus";
 import RuntimeHistory from "@/component/RuntimeHistory.vue";
-import {Delete} from "@element-plus/icons-vue";
+import {Connection, Delete} from "@element-plus/icons-vue";
 
 const locations = [
   {name: 'cn', desc: '中国大陆'},
@@ -108,8 +108,8 @@ watch(() => props.id, init, {immediate: true})
             服务器信息
           </div>
           <div>
-<!--            <el-button :icon="Connection" type="info"-->
-<!--                       @click="emits('terminal', id)" plain text>SSH远程连接</el-button>-->
+            <el-button :icon="Connection" type="info"
+                       @click="emits('terminal', id)" plain text>SSH远程连接</el-button>
             <el-button :icon="Delete" type="danger" style="margin-left: 0"
                        @click="deleteClient" plain text>删除此主机</el-button>
           </div>

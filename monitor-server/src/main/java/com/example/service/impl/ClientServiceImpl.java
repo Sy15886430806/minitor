@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.entity.dto.Client;
 import com.example.entity.dto.ClientDetail;
+import com.example.entity.dto.ClientSsh;
 import com.example.entity.vo.request.*;
 import com.example.entity.vo.response.*;
 import com.example.mapper.ClientDetailMapper;
 import com.example.mapper.ClientMapper;
+import com.example.mapper.ClientSshMapper;
 import com.example.service.ClientService;
 import com.example.utils.InfluxDbUtils;
 import jakarta.annotation.PostConstruct;
@@ -32,6 +34,9 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
 
     @Resource
     InfluxDbUtils influx;
+
+    @Resource
+    ClientSshMapper sshMapper;
 
     @PostConstruct
     public void initClientCache() {
@@ -74,7 +79,7 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
         ClientDetail detail = new ClientDetail();
         BeanUtils.copyProperties(vo, detail);
         detail.setId(client.getId());
-        if(Objects.nonNull(detailMapper.selectById(client.getId()))) {
+        if (Objects.nonNull(detailMapper.selectById(client.getId()))) {
             detailMapper.updateById(detail);
         } else {
             detailMapper.insert(detail);
@@ -95,7 +100,7 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
             ClientPreviewVO vo = client.asViewObject(ClientPreviewVO.class);
             BeanUtils.copyProperties(detailMapper.selectById(vo.getId()), vo);
             RuntimeDetailVO runtime = currentRuntime.get(client.getId());
-            if(this.isOnline(runtime)) {
+            if (this.isOnline(runtime)) {
                 BeanUtils.copyProperties(runtime, vo);
                 vo.setOnline(true);
             }
@@ -152,6 +157,33 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
         detailMapper.deleteById(clientId);
         this.initClientCache();
         currentRuntime.remove(clientId);
+    }
+
+    @Override
+    public void saveClientSshConnection(SshConnectionVO vo) {
+        Client client = clientIdCache.get(vo.getId());
+        if (client == null) return;
+        ClientSsh ssh = new ClientSsh();
+        BeanUtils.copyProperties(vo, ssh);
+        if (Objects.nonNull(sshMapper.selectById(client.getId()))) {
+            sshMapper.updateById(ssh);
+        } else {
+            sshMapper.insert(ssh);
+        }
+    }
+
+    @Override
+    public SshSettingsVO sshSettings(int clientId) {
+        ClientDetail detail = detailMapper.selectById(clientId);
+        ClientSsh ssh = sshMapper.selectById(clientId);
+        SshSettingsVO vo;
+        if (ssh == null) {
+            vo = new SshSettingsVO();
+        } else {
+            vo = ssh.asViewObject(SshSettingsVO.class);
+        }
+        vo.setIp(detail.getIp());
+        return vo;
     }
 
     private boolean isOnline(RuntimeDetailVO runtime) {

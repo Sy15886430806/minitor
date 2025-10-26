@@ -10,8 +10,6 @@ $Linux$ $Echarts$ $Spring$ $Quartz$ $oshi$ $InfluxDB$ $jsch$
 
 ![image-20231130143052572](https://s2.loli.net/2023/11/30/fKLIqEzhFZuYdCD.png)
 
-项目源代码和数据库文件下载地址：https://gitlab.itbaima.cn/itbaima-study/itbaima-monitor-jwt
-
 ## 客户端
 
 客户端是安装在需要监控主机上的软件程序，开启后自动进行数据收集并完成上报。
